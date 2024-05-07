@@ -1,7 +1,7 @@
 package Toko;
 
 public abstract class GameItem {
-    private String itemId;
+    private final String itemId;
     private String itemName;
     private int year;
     private int stock;
@@ -17,10 +17,6 @@ public abstract class GameItem {
 
     public String getItemId() {
         return itemId;
-    }
-
-    public void setItemId(String itemId) {
-        this.itemId = itemId;
     }
 
     public String getItemName() {
