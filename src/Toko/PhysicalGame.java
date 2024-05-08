@@ -39,6 +39,22 @@ public class PhysicalGame extends GameItem implements Sellable {
 
     @Override
     public void updateQuantity(int quantity) {
-        setStock(getStock() + quantity);
+        setStock(getStock() - quantity);
     }
+
+    @Override
+    public int getStock() {
+        return super.getStock();
+    }
+
+    @Override
+    public String getItemId() {
+        return super.getItemId();
+    }
+
+    @Override
+    public String getItemName() {
+        return super.getItemName();
+    }
+
 }

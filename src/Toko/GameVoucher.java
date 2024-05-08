@@ -1,13 +1,11 @@
 package Toko;
 
-import java.util.Date;
-
 public class GameVoucher extends GameItem implements Sellable {
     private String marketPlatform;
     private int quantity;
-    private Date validUntil;
+    private String validUntil;
 
-    public GameVoucher(String itemId, String itemName, int year, int stock, double price, String marketPlatform, int quantity, Date validUntil) {
+    public GameVoucher(String itemId, String itemName, int year, int stock, double price, String marketPlatform, int quantity, String validUntil) {
         super(itemId, itemName, year, stock, price);
         this.marketPlatform = marketPlatform;
         this.quantity = quantity;
@@ -30,11 +28,11 @@ public class GameVoucher extends GameItem implements Sellable {
         this.quantity = quantity;
     }
 
-    public Date getValidUntil() {
+    public String getValidUntil() {
         return validUntil;
     }
 
-    public void setValidUntil(Date validUntil) {
+    public void setValidUntil(String validUntil) {
         this.validUntil = validUntil;
     }
 
@@ -52,6 +50,22 @@ public class GameVoucher extends GameItem implements Sellable {
 
     @Override
     public void updateQuantity(int quantity) {
-        setStock(getStock() + quantity);
+        setStock(getStock() - quantity);
     }
+
+    @Override
+    public int getStock() {
+        return super.getStock();
+    }
+
+    @Override
+    public String getItemId() {
+        return super.getItemId();
+    }
+
+    @Override
+    public String getItemName() {
+        return super.getItemName();
+    }
+
 }
