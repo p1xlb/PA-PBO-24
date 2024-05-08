@@ -313,6 +313,9 @@ public class App {
     
             System.out.print("Masukkan dimensi baru (Enter untuk tidak mengubah): ");
             String newDimension = System.console().readLine();
+            if (!newDimension.isEmpty()) {
+                merchandise.setDimension(newDimension);
+            }
     
         inventory.updateItem((Sellable) item);
         System.out.println("Item berhasil diperbarui.");
