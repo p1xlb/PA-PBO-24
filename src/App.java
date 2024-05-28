@@ -1,51 +1,148 @@
+import java.sql.*;
+
 import Toko.*;
 
 public class App {
+    // Database connection details
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/PBO_PA";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "";
+
+    private static Connection connection;
+
     public static void main(String[] args) {
-        Inventory inventory = new Inventory();
-        TransactionManager transactionManager = new TransactionManager();
+        try {
+            // Establish the database connection
+            connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
 
-        // Menambahkan beberapa item ke dalam inventory
-        inventory.addItem(new DigitalGame("DG001", "Game A", 2022, 100, 59.99, 10.5, "PC"));
-        inventory.addItem(new PhysicalGame("PG001", "Game B", 2021, 50, 49.99, "Deluxe Edition", "PlayStation 5"));
-        inventory.addItem(new Merchandise("MC001", "T-Shirt", 2023, 200, 19.99, "Game A", "Clothing", "M"));
-        inventory.addItem(new GameVoucher("GV001", "Steam Wallet Code", 2023, 75, 25.00, "Steam", 25, "25/12/2024" )); // Tanggal valid sampai 31 Desember 2024
+            Inventory inventory = new Inventory();
+            TransactionManager transactionManager = new TransactionManager();
 
-        boolean exit = false;
-        while (!exit) {
-            System.out.println("\nMenu Utama:");
-            System.out.println("1. Lihat Inventory");
-            System.out.println("2. Tambah Item");
-            System.out.println("3. Ubah Item");
-            System.out.println("4. Lakukan Transaksi");
-            System.out.println("5. Keluar");
-            System.out.print("Masukkan pilihan: ");
+            // Load items from the database
+            loadInventoryFromDatabase(inventory);
 
-            int choice = Integer.parseInt(System.console().readLine());
+            boolean exit = false;
+            while (!exit) {
+                System.out.println("\nMenu Utama:");
+                System.out.println("1. Lihat Inventory");
+                System.out.println("2. Tambah Item");
+                System.out.println("3. Ubah Item");
+                System.out.println("4. Lakukan Transaksi");
+                System.out.println("5. Keluar");
+                System.out.print("Masukkan pilihan: ");
 
-            switch (choice) {
-                case 1:
-                    viewInventory(inventory);
-                    break;
-                case 2:
-                    addItem(inventory);
-                    break;
-                case 3:
-                    updateItem(inventory);
-                    break;
-                case 4:
-                    performTransaction(inventory, transactionManager);
-                    break;
-                case 5:
-                    exit = true;
-                    break;
-                default:
-                    System.out.println("Pilihan tidak valid!");
+                int choice = Integer.parseInt(System.console().readLine());
+
+                switch (choice) {
+                    case 1:
+                        viewInventory(inventory);
+                        break;
+                    case 2:
+                        addItem(inventory);
+                        break;
+                    case 3:
+                        updateItem(inventory);
+                        break;
+                    case 4:
+                        performTransaction(inventory, transactionManager);
+                        break;
+                    case 5:
+                        exit = true;
+                        break;
+                    default:
+                        System.out.println("Pilihan tidak valid!");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            // Close the database connection
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
 
+    private static void loadInventoryFromDatabase(Inventory inventory) {
+        try {
+            String query = "SELECT * FROM GameItems";
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
 
+            while (resultSet.next()) {
+                String itemId = resultSet.getString("ItemId");
+                String itemName = resultSet.getString("ItemName");
+                int year = resultSet.getInt("Year");
+                int stock = resultSet.getInt("Stock");
+                double price = resultSet.getDouble("Price");
+
+                GameItem item = loadItemDetails(itemId, itemName, year, stock, price);
+                if (item != null) {
+                    inventory.addItem(item);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static GameItem loadItemDetails(String itemId, String itemName, int year, int stock, double price) {
+        try {
+            String query = "SELECT * FROM DigitalGames WHERE ItemId = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, itemId);
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                double downloadSize = resultSet.getDouble("DownloadSize");
+                String platform = resultSet.getString("Platform");
+                return new DigitalGame(itemId, itemName, year, stock, price, downloadSize, platform);
+            }
+
+            query = "SELECT * FROM PhysicalGames WHERE ItemId = ?";
+            statement = connection.prepareStatement(query);
+            statement.setString(1, itemId);
+            resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                String edition = resultSet.getString("Edition");
+                String platform = resultSet.getString("Platform");
+                return new PhysicalGame(itemId, itemName, year, stock, price, edition, platform);
+            }
+
+            query = "SELECT * FROM Merchandise WHERE ItemId = ?";
+            statement = connection.prepareStatement(query);
+            statement.setString(1, itemId);
+            resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                String game = resultSet.getString("Game");
+                String type = resultSet.getString("Type");
+                String dimension = resultSet.getString("Dimension");
+                return new Merchandise(itemId, itemName, year, stock, price, game, type, dimension);
+            }
+
+            query = "SELECT * FROM GameVouchers WHERE ItemId = ?";
+            statement = connection.prepareStatement(query);
+            statement.setString(1, itemId);
+            resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                String platform = resultSet.getString("MarketPlatform");
+                int quantity = resultSet.getInt("Quantity");
+                String validUntil = resultSet.getString("ValidUntil");
+                return new GameVoucher(itemId, itemName, year, stock, price, platform, quantity, validUntil);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
 
     private static void performTransaction(Inventory inventory, TransactionManager transactionManager) {
         boolean checkout = false;
@@ -72,6 +169,7 @@ public class App {
                     break;
                 case 4:
                     transactionManager.checkout(inventory);
+                    saveTransaction(transactionManager);
                     checkout = true;
                     break;
                 case 5:
@@ -82,8 +180,6 @@ public class App {
             }
         }
     }
-
-
 
     private static void viewInventory(Inventory inventory) {
         System.out.println("\nPilih kategori item yang ingin ditampilkan:");
@@ -120,8 +216,8 @@ public class App {
 
         inventory.displayInventory(category);
     }
-    
-    private static void addItem(Inventory inventory){
+
+    private static void addItem(Inventory inventory) {
         System.out.print("Masukkan kategori item (DigitalGame, PhysicalGame, Merchandise, GameVoucher): ");
         String category = System.console().readLine();
 
@@ -132,7 +228,7 @@ public class App {
             case "physicalgame":
                 addPhysicalGame(inventory);
                 break;
-            case "merchandise":
+                case "merchandise":
                 addMerchandise(inventory);
                 break;
             case "gamevoucher":
@@ -158,9 +254,10 @@ public class App {
         double downloadSize = Double.parseDouble(System.console().readLine());
         System.out.print("Masukkan platform: ");
         String platform = System.console().readLine();
-    
+
         DigitalGame game = new DigitalGame(itemId, itemName, year, stock, price, downloadSize, platform);
         inventory.addItem(game);
+        saveItemToDatabase(game);
         System.out.println("Item berhasil ditambahkan.");
     }
 
@@ -179,9 +276,10 @@ public class App {
         String edition = System.console().readLine();
         System.out.print("Masukkan platform: ");
         String platform = System.console().readLine();
-    
+
         PhysicalGame game = new PhysicalGame(itemId, itemName, year, stock, price, edition, platform);
         inventory.addItem(game);
+        saveItemToDatabase(game);
         System.out.println("Item berhasil ditambahkan.");
     }
 
@@ -202,9 +300,10 @@ public class App {
         String type = System.console().readLine();
         System.out.print("Masukkan dimensi: ");
         String dimension = System.console().readLine();
-    
+
         Merchandise merchandise = new Merchandise(itemId, itemName, year, stock, price, game, type, dimension);
         inventory.addItem(merchandise);
+        saveItemToDatabase(merchandise);
         System.out.println("Item berhasil ditambahkan.");
     }
 
@@ -225,50 +324,50 @@ public class App {
         int quantity = Integer.parseInt(System.console().readLine());
         System.out.print("Masukkan tanggal valid sampai: ");
         String validUntil = System.console().readLine();
-    
+
         GameVoucher voucher = new GameVoucher(itemId, itemName, year, stock, price, platform, quantity, validUntil);
         inventory.addItem(voucher);
+        saveItemToDatabase(voucher);
         System.out.println("Item berhasil ditambahkan.");
     }
-    
 
-    private static void updateItem(Inventory inventory){
+    private static void updateItem(Inventory inventory) {
         System.out.print("Masukkan ID item yang ingin diubah: ");
         String itemId = System.console().readLine();
-    
+
         GameItem item = inventory.searchItem(itemId);
         if (item == null) {
             System.out.println("Item tidak ditemukan dalam inventory.");
             return;
         }
-    
+
         System.out.print("Masukkan nama item baru (Enter untuk tidak mengubah): ");
         String newItemName = System.console().readLine();
         if (!newItemName.isEmpty()) {
             item.setItemName(newItemName);
         }
-    
+
         System.out.print("Masukkan tahun rilis baru (Enter untuk tidak mengubah): ");
         String newYearInput = System.console().readLine();
         if (!newYearInput.isEmpty()) {
             int newYear = Integer.parseInt(newYearInput);
             item.setYear(newYear);
         }
-    
+
         System.out.print("Masukkan stok baru (Enter untuk tidak mengubah): ");
         String newStockInput = System.console().readLine();
         if (!newStockInput.isEmpty()) {
             int newStock = Integer.parseInt(newStockInput);
             item.setStock(newStock);
         }
-    
+
         System.out.print("Masukkan harga baru (Enter untuk tidak mengubah): ");
         String newPriceInput = System.console().readLine();
         if (!newPriceInput.isEmpty()) {
             double newPrice = Double.parseDouble(newPriceInput);
             item.setPrice(newPrice);
         }
-    
+
         // Tambahkan prompt untuk mengubah detail spesifik sesuai kategori item
         if (item instanceof DigitalGame) {
             DigitalGame game = (DigitalGame) item;
@@ -278,7 +377,7 @@ public class App {
                 double newDownloadSize = Double.parseDouble(newDownloadSizeInput);
                 game.setDownloadSize(newDownloadSize);
             }
-    
+
             System.out.print("Masukkan platform baru (Enter untuk tidak mengubah): ");
             String newPlatform = System.console().readLine();
             if (!newPlatform.isEmpty()) {
@@ -291,7 +390,7 @@ public class App {
             if (!newEdition.isEmpty()) {
                 game.setEdition(newEdition);
             }
-    
+
             System.out.print("Masukkan platform baru (Enter untuk tidak mengubah): ");
             String newPlatform = System.console().readLine();
             if (!newPlatform.isEmpty()) {
@@ -304,23 +403,43 @@ public class App {
             if (!newGame.isEmpty()) {
                 merchandise.setGame(newGame);
             }
-    
+
             System.out.print("Masukkan tipe baru (Enter untuk tidak mengubah): ");
             String newType = System.console().readLine();
             if (!newType.isEmpty()) {
                 merchandise.setType(newType);
             }
-    
+
             System.out.print("Masukkan dimensi baru (Enter untuk tidak mengubah): ");
             String newDimension = System.console().readLine();
             if (!newDimension.isEmpty()) {
                 merchandise.setDimension(newDimension);
             }
-    
-        inventory.updateItem((Sellable) item);
-        System.out.println("Item berhasil diperbarui.");
+        } else if (item instanceof GameVoucher) {
+            GameVoucher voucher = (GameVoucher) item;
+            System.out.print("Masukkan platform baru (Enter untuk tidak mengubah): ");
+            String newPlatform = System.console().readLine();
+            if (!newPlatform.isEmpty()) {
+                voucher.setMarketPlatform(newPlatform);
+            }
+
+            System.out.print("Masukkan jumlah baru (Enter untuk tidak mengubah): ");
+            String newQuantityInput = System.console().readLine();
+            if (!newQuantityInput.isEmpty()) {
+                int newQuantity = Integer.parseInt(newQuantityInput);
+                voucher.setQuantity(newQuantity);
+            }
+
+            System.out.print("Masukkan tanggal valid sampai baru (Enter untuk tidak mengubah): ");
+            String newValidUntil = System.console().readLine();
+            if (!newValidUntil.isEmpty()) {
+                voucher.setValidUntil(newValidUntil);
+            }
         }
-    
+
+        inventory.updateItem((Sellable) item);
+        updateItemInDatabase(item);
+        System.out.println("Item berhasil diperbarui.");
     }
 
     private static void addItemToCart(Inventory inventory, TransactionManager transactionManager) {
@@ -340,5 +459,201 @@ public class App {
         System.out.print("Masukkan ID item yang akan dihapus dari keranjang: ");
         String itemId = System.console().readLine();
         transactionManager.removeFromCart(itemId);
+    }
+
+    private static void saveItemToDatabase(GameItem item) {
+        try {
+            // Prepare the INSERT statement for the GameItems table
+            String query = "INSERT INTO GameItems (ItemId, ItemName, Year, Stock, Price) VALUES (?, ?, ?, ?, ?)";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, item.getItemId());
+            statement.setString(2, item.getItemName());
+            statement.setInt(3, item.getYear());
+            statement.setInt(4, item.getStock());
+            statement.setDouble(5, item.getPrice());
+            statement.executeUpdate();
+
+            // Save item-specific details to respective tables
+            if (item instanceof DigitalGame) {
+                saveDigitalGameDetails((DigitalGame) item);
+            } else if (item instanceof PhysicalGame) {
+                savePhysicalGameDetails((PhysicalGame) item);
+            } else if (item instanceof Merchandise) {
+                saveMerchandiseDetails((Merchandise) item);
+            } else if (item instanceof GameVoucher) {
+                saveGameVoucherDetails((GameVoucher) item);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void saveDigitalGameDetails(DigitalGame game) {
+        try {
+            String query = "INSERT INTO DigitalGames (ItemId, DownloadSize, Platform) VALUES (?, ?, ?)";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, game.getItemId());
+            statement.setDouble(2, game.getDownloadSize());
+            statement.setString(3, game.getPlatform());
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void savePhysicalGameDetails(PhysicalGame game) {
+        try {
+            String query = "INSERT INTO PhysicalGames (ItemId, Edition, Platform) VALUES (?, ?, ?)";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, game.getItemId());
+            statement.setString(2, game.getEdition());
+            statement.setString(3, game.getPlatform());
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void saveMerchandiseDetails(Merchandise merchandise) {
+        try {
+            String query = "INSERT INTO Merchandise (ItemId, Game, Type, Dimension) VALUES (?, ?, ?, ?)";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, merchandise.getItemId());
+            statement.setString(2, merchandise.getGame());
+            statement.setString(3, merchandise.getType());
+            statement.setString(4, merchandise.getDimension());
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void saveGameVoucherDetails(GameVoucher voucher) {
+        try {
+            String query = "INSERT INTO GameVouchers (ItemId, MarketPlatform, Quantity, ValidUntil) VALUES (?, ?, ?, ?)";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, voucher.getItemId());
+            statement.setString(2, voucher.getMarketPlatform());
+            statement.setInt(3, voucher.getQuantity());
+            statement.setString(4, voucher.getValidUntil());
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void updateItemInDatabase(GameItem item) {
+        try {
+            // Update the GameItems table
+            String query = "UPDATE GameItems SET ItemName = ?, Year = ?, Stock = ?, Price = ? WHERE ItemId = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, item.getItemName());
+            statement.setInt(2, item.getYear());
+            statement.setInt(3, item.getStock());
+            statement.setDouble(4, item.getPrice());
+            statement.setString(5, item.getItemId());
+            statement.executeUpdate();
+
+            // Update item-specific details in respective tables
+            if (item instanceof DigitalGame) {
+                updateDigitalGameDetails((DigitalGame) item);
+            } else if (item instanceof PhysicalGame) {
+                updatePhysicalGameDetails((PhysicalGame) item);
+            } else if (item instanceof Merchandise) {
+                updateMerchandiseDetails((Merchandise) item);
+            } else if (item instanceof GameVoucher) {
+                updateGameVoucherDetails((GameVoucher) item);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void updateDigitalGameDetails(DigitalGame game) {
+        try {
+            String query = "UPDATE DigitalGames SET DownloadSize = ?, Platform = ? WHERE ItemId = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setDouble(1, game.getDownloadSize());
+            statement.setString(2, game.getPlatform());
+            statement.setString(3, game.getItemId());
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void updatePhysicalGameDetails(PhysicalGame game) {
+        try {
+            String query = "UPDATE PhysicalGames SET Edition = ?, Platform = ? WHERE ItemId = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, game.getEdition());
+            statement.setString(2, game.getPlatform());
+            statement.setString(3, game.getItemId());
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void updateMerchandiseDetails(Merchandise merchandise) {
+        try {
+            String query = "UPDATE Merchandise SET Game = ?, Type = ?, Dimension = ? WHERE ItemId = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, merchandise.getGame());
+            statement.setString(2, merchandise.getType());
+            statement.setString(3, merchandise.getDimension());
+            statement.setString(4, merchandise.getItemId());
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void updateGameVoucherDetails(GameVoucher voucher) {
+        try {
+            String query = "UPDATE GameVouchers SET MarketPlatform = ?, Quantity = ?, ValidUntil = ? WHERE ItemId = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, voucher.getMarketPlatform());
+            statement.setInt(2, voucher.getQuantity());
+            statement.setString(3, voucher.getValidUntil());
+            statement.setString(4, voucher.getItemId());
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void saveTransaction(TransactionManager transactionManager) {
+        try {
+            // Insert a new transaction into the Transactions table
+            String query = "INSERT INTO Transactions (TransactionDate) VALUES (CURRENT_DATE())";
+            PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+            statement.executeUpdate();
+    
+            // Get the generated TransactionId
+            ResultSet generatedKeys = statement.getGeneratedKeys();
+            int transactionId = 0;
+            if (generatedKeys.next()) {
+                transactionId = generatedKeys.getInt(1);
+            }
+    
+            // Insert transaction items into the TransactionItems table
+            for (TransactionManager.CartItem cartItem : transactionManager.getCart()) {
+                Sellable item = cartItem.getItem();
+                int quantity = cartItem.getQuantity();
+                double totalPrice = item.getPrice() * quantity;
+    
+                query = "INSERT INTO TransactionItems (TransactionId, ItemId, Quantity, TotalPrice) VALUES (?, ?, ?, ?)";
+                statement = connection.prepareStatement(query);
+                statement.setInt(1, transactionId);
+                statement.setString(2, item.getItemId());
+                statement.setInt(3, quantity);
+                statement.setDouble(4, totalPrice);
+                statement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    
     }
 }

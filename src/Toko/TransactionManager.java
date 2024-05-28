@@ -3,14 +3,18 @@ package Toko;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TransactionManager{
+public class TransactionManager {
     private List<CartItem> cart;
 
     public TransactionManager() {
         cart = new ArrayList<>();
     }
 
-    private static class CartItem {
+    public List<CartItem> getCart() {
+        return cart;
+    }
+
+    public static class CartItem {
         private Sellable item;
         private int quantity;
 
