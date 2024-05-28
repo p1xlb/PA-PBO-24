@@ -12,6 +12,7 @@ public class App {
 
     public static void main(String[] args) {
         try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
             // Establish the database connection
             connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
 
@@ -53,6 +54,8 @@ public class App {
                         System.out.println("Pilihan tidak valid!");
                 }
             }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
