@@ -14,6 +14,10 @@ public class TransactionManager {
         return cart;
     }
 
+    public void clearCart(){
+        cart.clear();
+    }
+
     public static class CartItem {
         private Sellable item;
         private int quantity;
@@ -54,7 +58,6 @@ public class TransactionManager {
             inventory.updateItem(item);
         }
         System.out.println("Total Amount: $" + totalAmount);
-        cart.clear();
     }
 
     public void viewCart() {

@@ -29,7 +29,8 @@ public class App {
                 System.out.println("2. Tambah Item");
                 System.out.println("3. Ubah Item");
                 System.out.println("4. Lakukan Transaksi");
-                System.out.println("5. Keluar");
+                System.out.println("5. Lihat History ");
+                System.out.println("6. Keluar");
                 System.out.print("Masukkan pilihan: ");
 
                 int choice = Integer.parseInt(System.console().readLine());
@@ -48,6 +49,9 @@ public class App {
                         performTransaction(inventory, transactionManager);
                         break;
                     case 5:
+                        printHistory();
+                        break;
+                    case 6:
                         exit = true;
                         break;
                     default:
@@ -173,6 +177,7 @@ public class App {
                 case 4:
                     transactionManager.checkout(inventory);
                     saveTransaction(transactionManager);
+                    transactionManager.clearCart();
                     checkout = true;
                     break;
                 case 5:
@@ -639,13 +644,13 @@ public class App {
             if (generatedKeys.next()) {
                 transactionId = generatedKeys.getInt(1);
             }
-    
+            
             // Insert transaction items into the TransactionItems table
             for (TransactionManager.CartItem cartItem : transactionManager.getCart()) {
                 Sellable item = cartItem.getItem();
                 int quantity = cartItem.getQuantity();
                 double totalPrice = item.getPrice() * quantity;
-    
+                
                 query = "INSERT INTO TransactionItems (TransactionId, ItemId, Quantity, TotalPrice) VALUES (?, ?, ?, ?)";
                 statement = connection.prepareStatement(query);
                 statement.setInt(1, transactionId);
@@ -654,6 +659,34 @@ public class App {
                 statement.setDouble(4, totalPrice);
                 statement.executeUpdate();
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void printHistory(){
+        try {
+            String query = "SELECT * FROM `transactionitems` join transactions on transactions.TransactionId = transactionitems.TransactionId join gameitems on gameitems.ItemId = transactionitems.ItemId ORDER BY `transactionitems`.`TransactionId` ASC";
+
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+            int temp = 0;
+            while (resultSet.next()) {
+                int transactionId = resultSet.getInt("TransactionId");
+                String transactionDate = resultSet.getString("TransactionDate");
+                if(transactionId != temp){
+                    System.out.println("-----------------------------");
+                    System.out.println("Transaction ID." + transactionId + "     Date." + transactionDate);
+                    System.out.println("Items:");
+                }
+                String itemId = resultSet.getString("TransactionItems.ItemId");
+                String itemName = resultSet.getString("GameItems.ItemName");
+                int itemQuantity = resultSet.getInt("TransactionItems.Quantity");
+                double price = resultSet.getDouble("TransactionItems.TotalPrice");
+                System.out.println("[" + itemId + "] " + itemName + "(" + itemQuantity + ") : $" + price);
+                temp = transactionId;
+            }
+            System.out.println("-----------------------------");
         } catch (SQLException e) {
             e.printStackTrace();
         }
