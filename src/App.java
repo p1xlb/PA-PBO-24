@@ -28,9 +28,10 @@ public class App {
                 System.out.println("1. Lihat Inventory");
                 System.out.println("2. Tambah Item");
                 System.out.println("3. Ubah Item");
-                System.out.println("4. Lakukan Transaksi");
-                System.out.println("5. Lihat History ");
-                System.out.println("6. Keluar");
+                System.out.println("4. Hapus Item");
+                System.out.println("5. Lakukan Transaksi");
+                System.out.println("6. Lihat History ");
+                System.out.println("7. Keluar");
                 System.out.print("Masukkan pilihan: ");
 
                 int choice = Integer.parseInt(System.console().readLine());
@@ -46,12 +47,16 @@ public class App {
                         updateItem(inventory);
                         break;
                     case 4:
-                        performTransaction(inventory, transactionManager);
+                        viewInventory(inventory);
+                        deleteItem(inventory);
                         break;
                     case 5:
-                        printHistory();
+                        performTransaction(inventory, transactionManager);
                         break;
                     case 6:
+                        printHistory();
+                        break;
+                    case 7:
                         exit = true;
                         break;
                     default:
@@ -166,6 +171,7 @@ public class App {
 
             switch (choice) {
                 case 1:
+                    viewInventory(inventory);
                     addItemToCart(inventory, transactionManager);
                     break;
                 case 2:
@@ -450,6 +456,49 @@ public class App {
         System.out.println("Item berhasil diperbarui.");
     }
 
+    private static void deleteItem(Inventory inventory){
+        System.out.print("Masukkan ID item yang ingin dihapus: ");
+        String itemId = System.console().readLine();
+
+        GameItem item = inventory.searchItem(itemId);
+        if (item == null) {
+            System.out.println("Item tidak ditemukan dalam inventory.");
+            return;
+        }
+        
+        //hapus dari inventory
+        inventory.removeItem(itemId);
+
+        //hapus dari database
+        PreparedStatement statement = null;
+        try {
+            String[] deleteQueries = {
+                "DELETE FROM physicalgames WHERE ItemId = ?",
+                "DELETE FROM digitalgames WHERE ItemId = ?",
+                "DELETE FROM gamevouchers WHERE ItemId = ?",
+                "DELETE FROM merchandise WHERE ItemId = ?",
+                "DELETE FROM transactionitems WHERE ItemId = ?"
+            };
+    
+            for (String query : deleteQueries) {
+                statement = connection.prepareStatement(query);
+                statement.setString(1, itemId);
+                statement.executeUpdate();
+                statement.close();
+            }
+
+            String query = "DELETE FROM gameitems WHERE ItemId = ?";
+            statement = connection.prepareStatement(query);
+            statement.setString(1, itemId);
+            statement.executeUpdate();
+            
+            System.out.println("Item dengan ID " + itemId + " berhasil di hapus");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
     private static void addItemToCart(Inventory inventory, TransactionManager transactionManager) {
         System.out.print("Masukkan ID item: ");
         String itemId = System.console().readLine();
@@ -675,7 +724,7 @@ public class App {
                 int transactionId = resultSet.getInt("TransactionId");
                 String transactionDate = resultSet.getString("TransactionDate");
                 if(transactionId != temp){
-                    System.out.println("-----------------------------");
+                    System.out.println("-------------------------------------");
                     System.out.println("Transaction ID." + transactionId + "     Date." + transactionDate);
                     System.out.println("Items:");
                 }
@@ -686,7 +735,7 @@ public class App {
                 System.out.println("[" + itemId + "] " + itemName + "(" + itemQuantity + ") : $" + price);
                 temp = transactionId;
             }
-            System.out.println("-----------------------------");
+            System.out.println("-------------------------------------");
         } catch (SQLException e) {
             e.printStackTrace();
         }

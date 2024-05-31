@@ -28,7 +28,6 @@ public class Inventory {
         }
     }
 
-
     public GameItem searchItem(String itemId) {
         for (GameItem item : itemList) {
             if (item.getItemId().equals(itemId)) {
