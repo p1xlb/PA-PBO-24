@@ -33,35 +33,40 @@ public class App {
                 System.out.println("6. Lihat History ");
                 System.out.println("7. Keluar");
                 System.out.print("Masukkan pilihan: ");
+                try {
+                    int choice = Integer.parseInt(System.console().readLine());
 
-                int choice = Integer.parseInt(System.console().readLine());
-
-                switch (choice) {
-                    case 1:
-                        viewInventory(inventory);
-                        break;
-                    case 2:
-                        addItem(inventory);
-                        break;
-                    case 3:
-                        updateItem(inventory);
-                        break;
-                    case 4:
-                        viewInventory(inventory);
-                        deleteItem(inventory);
-                        break;
-                    case 5:
-                        performTransaction(inventory, transactionManager);
-                        break;
-                    case 6:
-                        printHistory();
-                        break;
-                    case 7:
-                        exit = true;
-                        break;
-                    default:
-                        System.out.println("Pilihan tidak valid!");
+                    switch (choice) {
+                        case 1:
+                            viewInventory(inventory);
+                            break;
+                        case 2:
+                            addItem(inventory);
+                            break;
+                        case 3:
+                            updateItem(inventory);
+                            break;
+                        case 4:
+                            viewInventory(inventory);
+                            deleteItem(inventory);
+                            break;
+                        case 5:
+                            performTransaction(inventory, transactionManager);
+                            break;
+                        case 6:
+                            printHistory();
+                            break;
+                        case 7:
+                            exit = true;
+                            break;
+                        default:
+                            System.out.println("Pilihan tidak valid!");
+                    }
+                } catch (Exception e) {
+                    System.out.println("Plihan tidak valid!");
                 }
+
+
             }
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
@@ -175,6 +180,7 @@ public class App {
                     addItemToCart(inventory, transactionManager);
                     break;
                 case 2:
+                    transactionManager.viewCart();
                     removeItemFromCart(transactionManager);
                     break;
                 case 3:
@@ -258,14 +264,10 @@ public class App {
         String itemId = System.console().readLine();
         System.out.print("Masukkan nama item: ");
         String itemName = System.console().readLine();
-        System.out.print("Masukkan tahun rilis: ");
-        int year = Integer.parseInt(System.console().readLine());
-        System.out.print("Masukkan stok: ");
-        int stock = Integer.parseInt(System.console().readLine());
-        System.out.print("Masukkan harga: ");
-        double price = Double.parseDouble(System.console().readLine());
-        System.out.print("Masukkan ukuran download (GB): ");
-        double downloadSize = Double.parseDouble(System.console().readLine());
+        int year = inputYear();
+        int stock = inputStock();
+        double price = inputPrice();
+        double downloadSize = inputDownloadSize();
         System.out.print("Masukkan platform: ");
         String platform = System.console().readLine();
 
@@ -280,12 +282,9 @@ public class App {
         String itemId = System.console().readLine();
         System.out.print("Masukkan nama item: ");
         String itemName = System.console().readLine();
-        System.out.print("Masukkan tahun rilis: ");
-        int year = Integer.parseInt(System.console().readLine());
-        System.out.print("Masukkan stok: ");
-        int stock = Integer.parseInt(System.console().readLine());
-        System.out.print("Masukkan harga: ");
-        double price = Double.parseDouble(System.console().readLine());
+        int year = inputYear();
+        int stock = inputStock();
+        double price = inputPrice();
         System.out.print("Masukkan edisi: ");
         String edition = System.console().readLine();
         System.out.print("Masukkan platform: ");
@@ -302,12 +301,9 @@ public class App {
         String itemId = System.console().readLine();
         System.out.print("Masukkan nama item: ");
         String itemName = System.console().readLine();
-        System.out.print("Masukkan tahun rilis: ");
-        int year = Integer.parseInt(System.console().readLine());
-        System.out.print("Masukkan stok: ");
-        int stock = Integer.parseInt(System.console().readLine());
-        System.out.print("Masukkan harga: ");
-        double price = Double.parseDouble(System.console().readLine());
+        int year = inputYear();
+        int stock = inputStock();
+        double price = inputPrice();
         System.out.print("Masukkan game: ");
         String game = System.console().readLine();
         System.out.print("Masukkan tipe: ");
@@ -326,12 +322,9 @@ public class App {
         String itemId = System.console().readLine();
         System.out.print("Masukkan nama item: ");
         String itemName = System.console().readLine();
-        System.out.print("Masukkan tahun rilis: ");
-        int year = Integer.parseInt(System.console().readLine());
-        System.out.print("Masukkan stok: ");
-        int stock = Integer.parseInt(System.console().readLine());
-        System.out.print("Masukkan harga: ");
-        double price = Double.parseDouble(System.console().readLine());
+        int year = inputYear();
+        int stock = inputStock();
+        double price = inputPrice();
         System.out.print("Masukkan platform: ");
         String platform = System.console().readLine();
         System.out.print("Masukkan jumlah: ");
@@ -826,4 +819,92 @@ public class App {
             e.printStackTrace();
         }
     }
+
+    private static int inputYear(){
+        while (true) {
+            System.out.print("Masukkan tahun rilis: ");
+            String yearInput = System.console().readLine();
+            if (yearInput.isEmpty()) {
+                System.out.println("Data tidak boleh kosong");
+            } 
+            
+            else {
+                try {
+                    if (Integer.parseInt(yearInput) <= 0) {
+                        System.out.println("Input tahun tidak valid. Tahun tidak boleh negatif atau nol.");
+                    } else {
+                        return Integer.parseInt(yearInput);
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Input tahun tidak valid. Silakan masukkan angka saja.");
+                }
+            }
+        }
+    }
+
+    private static int inputStock(){
+        while (true) {
+            System.out.print("Masukkan stok: ");
+            String stokInput = System.console().readLine();
+            if (stokInput.isEmpty()) {
+                System.out.println("Data tidak boleh kosong");
+            } 
+            
+            else {
+                try {
+                    if (Integer.parseInt(stokInput) < 0) {
+                        System.out.println("Input stok tidak valid. Stok tidak boleh negatif.");
+                    } else {
+                        return Integer.parseInt(stokInput);
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Input stok tidak valid. Silakan masukkan angka saja.");
+                }
+            }
+        }
+    }    
+
+    private static double inputPrice(){
+        while (true) {
+            System.out.print("Masukkan harga: ");
+            String priceInput = System.console().readLine();
+            if (priceInput.isEmpty()) {
+                System.out.println("Data tidak boleh kosong");
+            } 
+            
+            else {
+                try {
+                    if (Double.parseDouble(priceInput) <= 0) {
+                        System.out.println("Input harga tidak valid. Harga tidak boleh negatif atau nol.");
+                    } else {
+                        return Double.parseDouble(priceInput);
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Input harga tidak valid. Silakan masukkan angka saja.");
+                }
+            }
+        }
+    }    
+
+    private static double inputDownloadSize(){
+        while (true) {
+            System.out.print("Masukkan ukuran download (GB): ");
+            String downloadSizeInput = System.console().readLine();
+            if (downloadSizeInput.isEmpty()) {
+                System.out.println("Data tidak boleh kosong");
+            } 
+            
+            else {
+                try {
+                    if (Double.parseDouble(downloadSizeInput) <= 0) {
+                        System.out.println("Input Size tidak valid. Size tidak boleh negatif atau nol.");
+                    } else {
+                        return Double.parseDouble(downloadSizeInput);
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Input Size tidak valid. Silakan masukkan angka saja.");
+                }
+            }
+        }
+    }    
 }

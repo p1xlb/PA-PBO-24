@@ -34,6 +34,10 @@ public class TransactionManager {
         public int getQuantity() {
             return quantity;
         }
+
+        public String getID(){
+            return item.getItemId();
+        }
     }
 
     public void addToCart(Sellable item, int quantity) {
@@ -62,19 +66,18 @@ public class TransactionManager {
 
     public void viewCart() {
         if (cart.isEmpty()) {
-            System.out.println("Keranjang kosong.");
+            System.out.println("\nKeranjang kosong.");
         } else {
-            System.out.println("Isi Keranjang:");
+            System.out.println("\nIsi Keranjang:");
             double totalAmount = 0;
             for (CartItem cartItem : cart) {
                 Sellable item = cartItem.getItem();
+                String id = cartItem.getID();
                 int quantity = cartItem.getQuantity();
                 double itemTotal = item.getPrice() * quantity;
                 totalAmount += itemTotal;
 
-                System.out.println("Item: " + item.getItemName());
-                System.out.println("Jumlah: " + quantity);
-                System.out.println("Harga: $" + item.getPrice());
+                System.out.println("[" + id + "] " + item.getItemName() + " (" + quantity + ") : $" + item.getPrice());
                 System.out.println("Total: $" + itemTotal);
                 System.out.println("---------------------");
             }
