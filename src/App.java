@@ -346,6 +346,7 @@ public class App {
     }
 
     private static void updateItem(Inventory inventory) {
+        viewInventory(inventory); //menampilkan isi inventory
         System.out.print("Masukkan ID item yang ingin diubah: ");
         String itemId = System.console().readLine();
 
@@ -362,23 +363,91 @@ public class App {
         }
 
         System.out.print("Masukkan tahun rilis baru (Enter untuk tidak mengubah): ");
-        String newYearInput = System.console().readLine();
-        if (!newYearInput.isEmpty()) {
-            int newYear = Integer.parseInt(newYearInput);
+        String newYearInput;
+        boolean validInput = false;
+        int newYear = item.getYear(); // Initialize with the current year
+            
+        while (!validInput) {
+            newYearInput = System.console().readLine();
+            if (newYearInput.isEmpty()) {
+                validInput = true; // Empty input is considered valid, so we don't update the year
+            } 
+            
+            else {
+                try {
+                    if (Integer.parseInt(newYearInput) <= 0) {
+                        System.out.println("Input tahun tidak valid. Tahun tidak boleh negatif.");
+                        System.out.print("Masukkan tahun rilis baru (Enter untuk tidak mengubah): ");
+                    } else {
+                        newYear = Integer.parseInt(newYearInput);
+                        validInput = true;
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Input tahun tidak valid. Silakan masukkan angka saja.");
+                    System.out.print("Masukkan tahun rilis baru (Enter untuk tidak mengubah): ");
+                }
+            }
+        }
+
+        if (validInput) {
             item.setYear(newYear);
         }
-
+        
         System.out.print("Masukkan stok baru (Enter untuk tidak mengubah): ");
         String newStockInput = System.console().readLine();
-        if (!newStockInput.isEmpty()) {
-            int newStock = Integer.parseInt(newStockInput);
+        int newStock = item.getStock();
+        boolean validInputStock = false;
+        while (!validInputStock) {
+            if (newStockInput.isEmpty()) {
+                validInputStock = true;
+            } 
+                        
+            else {
+                try {
+                    if (Integer.parseInt(newStockInput) < 0) {
+                        System.out.println("Input stok tidak valid. Stok tidak boleh negatif.");
+                        System.out.print("Masukkan stok baru (Enter untuk tidak mengubah): ");
+                    } else {
+                        newStock = Integer.parseInt(newStockInput);
+                        validInputStock = true;
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Input stok tidak valid. Silakan masukkan angka saja.");
+                    System.out.print("Masukkan stok baru (Enter untuk tidak mengubah): ");
+                }
+            }
+        }
+        if (validInputStock) {
             item.setStock(newStock);
         }
+        
 
         System.out.print("Masukkan harga baru (Enter untuk tidak mengubah): ");
-        String newPriceInput = System.console().readLine();
-        if (!newPriceInput.isEmpty()) {
-            double newPrice = Double.parseDouble(newPriceInput);
+        String newPriceInput;
+        boolean validInputPrice = false;
+        double newPrice = item.getPrice(); // Initialize with the current price
+
+        while (!validInputPrice) {
+            newPriceInput = System.console().readLine();
+            if (newPriceInput.isEmpty()) {
+                validInputPrice = true; // Empty input is considered valid, so we don't update the price
+            } else {
+                try {
+                    newPrice = Double.parseDouble(newPriceInput);
+                    if (newPrice <= 0) {
+                        System.out.println("Harga tidak boleh bernilai negatif atau nol. Silakan masukkan harga yang valid.");
+                        System.out.print("Masukkan harga baru (Enter untuk tidak mengubah): ");
+                    } else {
+                        validInputPrice = true;
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Input harga tidak valid. Silakan masukkan angka saja.");
+                    System.out.print("Masukkan harga baru (Enter untuk tidak mengubah): ");
+                }
+            }
+        }
+
+        if (validInputPrice) {
             item.setPrice(newPrice);
         }
 
@@ -387,9 +456,26 @@ public class App {
             DigitalGame game = (DigitalGame) item;
             System.out.print("Masukkan ukuran download baru (Enter untuk tidak mengubah): ");
             String newDownloadSizeInput = System.console().readLine();
-            if (!newDownloadSizeInput.isEmpty()) {
-                double newDownloadSize = Double.parseDouble(newDownloadSizeInput);
-                game.setDownloadSize(newDownloadSize);
+            boolean validInputDownloadSize = false;
+            double newDownloadSize = game.getDownloadSize(); // Initialize with the current download size
+
+            while (!validInputDownloadSize) {
+                if (newDownloadSizeInput.isEmpty()) {
+                    validInputDownloadSize = true;
+                } else {
+                    try {
+                        newDownloadSize = Double.parseDouble(newDownloadSizeInput);
+                        if (newDownloadSize <= 0) {
+                            System.out.println("Ukuran download tidak boleh bernilai negatif atau nol. Silakan masukkan ukuran download yang valid.");
+                            System.out.print("Masukkan ukuran download baru (Enter untuk tidak mengubah): ");
+                        } else {
+                            validInputDownloadSize = true;
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Input ukuran download tidak valid. Silakan masukkan angka saja.");
+                        System.out.print("Masukkan ukuran download baru (Enter untuk tidak mengubah): ");
+                    }
+                }
             }
 
             System.out.print("Masukkan platform baru (Enter untuk tidak mengubah): ");
