@@ -2,6 +2,8 @@ import java.sql.*;
 
 import Toko.*;
 
+import java.io.IOException;
+
 public class App {
     // Database connection details
     private static final String DB_URL = "jdbc:mysql://localhost:3306/PBO_PA";
@@ -25,38 +27,28 @@ public class App {
             boolean exit = false;
             while (!exit) {
                 System.out.println("\nMenu Utama:");
-                System.out.println("1. Lihat Inventory");
-                System.out.println("2. Tambah Item");
-                System.out.println("3. Ubah Item");
-                System.out.println("4. Hapus Item");
-                System.out.println("5. Lakukan Transaksi");
-                System.out.println("6. Lihat History ");
-                System.out.println("7. Keluar");
+                System.out.println("1. Menu Manajemen Inventory");
+                System.out.println("2. Menu Transaksi");
+                System.out.println("3. Lihat History ");
+                System.out.println("0. Keluar");
                 System.out.print("Masukkan pilihan: ");
                 try {
                     int choice = Integer.parseInt(System.console().readLine());
 
                     switch (choice) {
                         case 1:
-                            viewInventory(inventory);
+                            clearConsole();
+                            managementItemsMenu(inventory);
                             break;
                         case 2:
-                            addItem(inventory);
-                            break;
-                        case 3:
-                            updateItem(inventory);
-                            break;
-                        case 4:
-                            viewInventory(inventory);
-                            deleteItem(inventory);
-                            break;
-                        case 5:
+                            clearConsole();
                             performTransaction(inventory, transactionManager);
                             break;
-                        case 6:
+                        case 3:
                             printHistory();
                             break;
-                        case 7:
+                        case 0:
+                            System.out.println("Selamat Tinggal!!!");
                             exit = true;
                             break;
                         default:
@@ -161,6 +153,44 @@ public class App {
         return null;
     }
 
+    private static void managementItemsMenu(Inventory inventory) {
+        boolean exit = false;
+        while (!exit) {
+            System.out.println("\nMenu Manajemen Inventory");
+            System.out.println("1. Lihat Inventory");
+            System.out.println("2. Tambah Item");
+            System.out.println("3. Ubah Item");
+            System.out.println("4. Hapus Item");
+            System.out.println("0. Kembali");
+            System.out.println("Masukkan pilihan: ");
+            
+            int choice = Integer.parseInt(System.console().readLine());
+
+            switch (choice) {
+                case 1:
+                    clearConsole();
+                    viewInventory(inventory);
+                    break;
+                case 2:
+                    clearConsole();
+                    addItem(inventory);
+                    break;
+                case 3:
+                    clearConsole();
+                    updateItem(inventory);
+                    break;
+                case 4:
+                    viewInventory(inventory);
+                    deleteItem(inventory);
+                    break;
+                case 0:
+                    exit = true;
+                    break;
+                default:
+                    System.out.println("Pilihan tidak valid!");
+            }
+        }
+    }
     private static void performTransaction(Inventory inventory, TransactionManager transactionManager) {
         boolean checkout = false;
         while (!checkout) {
@@ -238,104 +268,141 @@ public class App {
     }
 
     private static void addItem(Inventory inventory) {
-        System.out.print("Masukkan kategori item (DigitalGame, PhysicalGame, Merchandise, GameVoucher): ");
-        String category = System.console().readLine();
+        System.out.println("\nPilih kategori item yang ingin ditambahkan:");
+        System.out.println("1. DigitalGame");
+        System.out.println("2. PhysicalGame");
+        System.out.println("3. Merchandise");
+        System.out.println("4. GameVoucher");
+        System.out.print("Masukkan pilihan: ");
 
-        switch (category.toLowerCase()) {
-            case "digitalgame":
+        int choice = Integer.parseInt(System.console().readLine());
+        
+
+        switch (choice) {
+            case 1:
+                
                 addDigitalGame(inventory);
                 break;
-            case "physicalgame":
+            case 2:
+                
                 addPhysicalGame(inventory);
                 break;
-                case "merchandise":
+            case 3:
+                
                 addMerchandise(inventory);
                 break;
-            case "gamevoucher":
+            case 4:
+                
                 addGameVoucher(inventory);
                 break;
             default:
-                System.out.println("Kategori tidak valid!");
+                System.out.println("Pilihan tidak valid!");
+                return;
         }
+       
     }
 
     private static void addDigitalGame(Inventory inventory) {
         System.out.print("Masukkan ID item: ");
         String itemId = System.console().readLine();
-        System.out.print("Masukkan nama item: ");
-        String itemName = System.console().readLine();
-        int year = inputYear();
-        int stock = inputStock();
-        double price = inputPrice();
-        double downloadSize = inputDownloadSize();
-        System.out.print("Masukkan platform: ");
-        String platform = System.console().readLine();
+        boolean isExist = isIdExist(itemId);
+        if (isExist) {
+            System.out.println("ID " + itemId + " Sudah dipakai");
+            return;
+        } else {
+            System.out.print("Masukkan nama item: ");
+            String itemName = System.console().readLine();
+            int year = inputYear();
+            int stock = inputStock();
+            double price = inputPrice();
+            double downloadSize = inputDownloadSize();
+            System.out.print("Masukkan platform: ");
+            String platform = System.console().readLine();
+            DigitalGame game = new DigitalGame(itemId, itemName, year, stock, price, downloadSize, platform);
+            inventory.addItem(game);
+            saveItemToDatabase(game);
+            System.out.println("Item berhasil ditambahkan.");
+        }
 
-        DigitalGame game = new DigitalGame(itemId, itemName, year, stock, price, downloadSize, platform);
-        inventory.addItem(game);
-        saveItemToDatabase(game);
-        System.out.println("Item berhasil ditambahkan.");
     }
 
     private static void addPhysicalGame(Inventory inventory) {
         System.out.print("Masukkan ID item: ");
         String itemId = System.console().readLine();
-        System.out.print("Masukkan nama item: ");
-        String itemName = System.console().readLine();
-        int year = inputYear();
-        int stock = inputStock();
-        double price = inputPrice();
-        System.out.print("Masukkan edisi: ");
-        String edition = System.console().readLine();
-        System.out.print("Masukkan platform: ");
-        String platform = System.console().readLine();
-
-        PhysicalGame game = new PhysicalGame(itemId, itemName, year, stock, price, edition, platform);
-        inventory.addItem(game);
-        saveItemToDatabase(game);
-        System.out.println("Item berhasil ditambahkan.");
+        boolean isExist = isIdExist(itemId);
+        if (isExist) {
+            System.out.println("ID " + itemId + " sudah dipakai.");
+            return;
+        } else {
+            System.out.print("Masukkan nama item: ");
+            String itemName = System.console().readLine();
+            int year = inputYear();
+            int stock = inputStock();
+            double price = inputPrice();
+            System.out.print("Masukkan edisi: ");
+            String edition = System.console().readLine();
+            System.out.print("Masukkan platform: ");
+            String platform = System.console().readLine();
+    
+            PhysicalGame game = new PhysicalGame(itemId, itemName, year, stock, price, edition, platform);
+            inventory.addItem(game);
+            saveItemToDatabase(game);
+            System.out.println("Item berhasil ditambahkan.");
+        }
     }
 
     private static void addMerchandise(Inventory inventory) {
         System.out.print("Masukkan ID item: ");
         String itemId = System.console().readLine();
-        System.out.print("Masukkan nama item: ");
-        String itemName = System.console().readLine();
-        int year = inputYear();
-        int stock = inputStock();
-        double price = inputPrice();
-        System.out.print("Masukkan game: ");
-        String game = System.console().readLine();
-        System.out.print("Masukkan tipe: ");
-        String type = System.console().readLine();
-        System.out.print("Masukkan dimensi: ");
-        String dimension = System.console().readLine();
-
-        Merchandise merchandise = new Merchandise(itemId, itemName, year, stock, price, game, type, dimension);
-        inventory.addItem(merchandise);
-        saveItemToDatabase(merchandise);
-        System.out.println("Item berhasil ditambahkan.");
+        boolean isExist = isIdExist(itemId);
+        if (isExist) {
+            System.out.println("ID " + itemId + " sudah dipakai.");
+            return;
+        } else {
+            System.out.print("Masukkan nama item: ");
+            String itemName = System.console().readLine();
+            int year = inputYear();
+            int stock = inputStock();
+            double price = inputPrice();
+            System.out.print("Masukkan game: ");
+            String game = System.console().readLine();
+            System.out.print("Masukkan tipe: ");
+            String type = System.console().readLine();
+            System.out.print("Masukkan dimensi: ");
+            String dimension = System.console().readLine();
+    
+            Merchandise merchandise = new Merchandise(itemId, itemName, year, stock, price, game, type, dimension);
+            inventory.addItem(merchandise);
+            saveItemToDatabase(merchandise);
+            System.out.println("Item berhasil ditambahkan.");
+        }
     }
 
     private static void addGameVoucher(Inventory inventory) {
         System.out.print("Masukkan ID item: ");
         String itemId = System.console().readLine();
-        System.out.print("Masukkan nama item: ");
-        String itemName = System.console().readLine();
-        int year = inputYear();
-        int stock = inputStock();
-        double price = inputPrice();
-        System.out.print("Masukkan platform: ");
-        String platform = System.console().readLine();
-        System.out.print("Masukkan jumlah: ");
-        int quantity = Integer.parseInt(System.console().readLine());
-        System.out.print("Masukkan tanggal valid sampai: ");
-        String validUntil = System.console().readLine();
-
-        GameVoucher voucher = new GameVoucher(itemId, itemName, year, stock, price, platform, quantity, validUntil);
-        inventory.addItem(voucher);
-        saveItemToDatabase(voucher);
-        System.out.println("Item berhasil ditambahkan.");
+        boolean isExist = isIdExist(itemId);
+        if (isExist) {
+            System.out.println("ID " + itemId + " sudah dipakai.");
+            return;
+        } else {
+            System.out.print("Masukkan nama item: ");
+            String itemName = System.console().readLine();
+            int year = inputYear();
+            int stock = inputStock();
+            double price = inputPrice();
+            System.out.print("Masukkan platform: ");
+            String platform = System.console().readLine();
+            System.out.print("Masukkan jumlah: ");
+            int quantity = Integer.parseInt(System.console().readLine());
+            System.out.print("Masukkan tanggal valid sampai: ");
+            String validUntil = System.console().readLine();
+    
+            GameVoucher voucher = new GameVoucher(itemId, itemName, year, stock, price, platform, quantity, validUntil);
+            inventory.addItem(voucher);
+            saveItemToDatabase(voucher);
+            System.out.println("Item berhasil ditambahkan.");
+        }
     }
 
     private static void updateItem(Inventory inventory) {
@@ -907,4 +974,40 @@ public class App {
             }
         }
     }    
+
+    //cek apakah id sudah ada di database
+    public static boolean isIdExist(String idToCheck) {
+        String query = "SELECT COUNT(*) FROM gameitems WHERE itemId = ?";
+        
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, idToCheck);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                return count > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+
+    //void untuk membersihkan terminal
+    public static void clearConsole() {
+        try {
+            if (System.getProperty("os.name").contains("Windows")) {
+                // Command for Windows
+                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+            } else {
+                // Command for Unix/Linux/MacOS
+                System.out.print("\033[H\033[2J");
+                System.out.flush();
+            }
+        } catch (IOException | InterruptedException ex) {
+            System.out.println("Error clearing console: " + ex.getMessage());
+        }
+    }
+
 }
