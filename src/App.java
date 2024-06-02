@@ -5,7 +5,7 @@ import Toko.*;
 import java.io.IOException;
 
 public class App {
-    // Database connection details
+    // Kredensial database
     private static final String DB_URL = "jdbc:mysql://localhost:3306/PBO_PA";
     private static final String DB_USER = "root";
     private static final String DB_PASSWORD = "";
@@ -15,13 +15,13 @@ public class App {
     public static void main(String[] args) {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            // Establish the database connection
+            // Koneksi ke Database
             connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
 
             Inventory inventory = new Inventory();
             TransactionManager transactionManager = new TransactionManager();
 
-            // Load items from the database
+            // Masukkan item-item yang ada di database ke dalam inventory
             loadInventoryFromDatabase(inventory);
 
             boolean exit = false;
@@ -65,7 +65,7 @@ public class App {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            // Close the database connection
+            // Tutup koneksi database
             if (connection != null) {
                 try {
                     connection.close();
@@ -78,7 +78,7 @@ public class App {
 
     private static void loadInventoryFromDatabase(Inventory inventory) {
         try {
-            String query = "SELECT * FROM GameItems";
+            String query = "SELECT * FROM gameitems";
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
 
@@ -101,7 +101,7 @@ public class App {
 
     private static GameItem loadItemDetails(String itemId, String itemName, int year, int stock, double price) {
         try {
-            String query = "SELECT * FROM DigitalGames WHERE ItemId = ?";
+            String query = "SELECT * FROM digitalgames WHERE ItemId = ?";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, itemId);
             ResultSet resultSet = statement.executeQuery();
@@ -112,7 +112,7 @@ public class App {
                 return new DigitalGame(itemId, itemName, year, stock, price, downloadSize, platform);
             }
 
-            query = "SELECT * FROM PhysicalGames WHERE ItemId = ?";
+            query = "SELECT * FROM physicalgames WHERE ItemId = ?";
             statement = connection.prepareStatement(query);
             statement.setString(1, itemId);
             resultSet = statement.executeQuery();
@@ -123,7 +123,7 @@ public class App {
                 return new PhysicalGame(itemId, itemName, year, stock, price, edition, platform);
             }
 
-            query = "SELECT * FROM Merchandise WHERE ItemId = ?";
+            query = "SELECT * FROM merchandise WHERE ItemId = ?";
             statement = connection.prepareStatement(query);
             statement.setString(1, itemId);
             resultSet = statement.executeQuery();
@@ -135,7 +135,7 @@ public class App {
                 return new Merchandise(itemId, itemName, year, stock, price, game, type, dimension);
             }
 
-            query = "SELECT * FROM GameVouchers WHERE ItemId = ?";
+            query = "SELECT * FROM gamevouchers WHERE ItemId = ?";
             statement = connection.prepareStatement(query);
             statement.setString(1, itemId);
             resultSet = statement.executeQuery();
@@ -277,7 +277,6 @@ public class App {
 
         int choice = Integer.parseInt(System.console().readLine());
         
-
         switch (choice) {
             case 1:
                 
@@ -299,7 +298,6 @@ public class App {
                 System.out.println("Pilihan tidak valid!");
                 return;
         }
-       
     }
 
     private static void addDigitalGame(Inventory inventory) {
@@ -323,7 +321,6 @@ public class App {
             saveItemToDatabase(game);
             System.out.println("Item berhasil ditambahkan.");
         }
-
     }
 
     private static void addPhysicalGame(Inventory inventory) {
@@ -425,14 +422,13 @@ public class App {
         System.out.print("Masukkan tahun rilis baru (Enter untuk tidak mengubah): ");
         String newYearInput;
         boolean validInput = false;
-        int newYear = item.getYear(); // Initialize with the current year
+        int newYear = item.getYear(); 
             
         while (!validInput) {
             newYearInput = System.console().readLine();
             if (newYearInput.isEmpty()) {
-                validInput = true; // Empty input is considered valid, so we don't update the year
+                validInput = true; 
             } 
-            
             else {
                 try {
                     if (Integer.parseInt(newYearInput) <= 0) {
@@ -448,7 +444,6 @@ public class App {
                 }
             }
         }
-
         if (validInput) {
             item.setYear(newYear);
         }
@@ -480,17 +475,16 @@ public class App {
         if (validInputStock) {
             item.setStock(newStock);
         }
-        
 
         System.out.print("Masukkan harga baru (Enter untuk tidak mengubah): ");
         String newPriceInput;
         boolean validInputPrice = false;
-        double newPrice = item.getPrice(); // Initialize with the current price
+        double newPrice = item.getPrice(); 
 
         while (!validInputPrice) {
             newPriceInput = System.console().readLine();
             if (newPriceInput.isEmpty()) {
-                validInputPrice = true; // Empty input is considered valid, so we don't update the price
+                validInputPrice = true; 
             } else {
                 try {
                     newPrice = Double.parseDouble(newPriceInput);
@@ -506,18 +500,17 @@ public class App {
                 }
             }
         }
-
         if (validInputPrice) {
             item.setPrice(newPrice);
         }
 
-        // Tambahkan prompt untuk mengubah detail spesifik sesuai kategori item
+        // penambahan prompt untuk mengubah detail spesifik sesuai kategori item
         if (item instanceof DigitalGame) {
             DigitalGame game = (DigitalGame) item;
             System.out.print("Masukkan ukuran download baru (Enter untuk tidak mengubah): ");
             String newDownloadSizeInput = System.console().readLine();
             boolean validInputDownloadSize = false;
-            double newDownloadSize = game.getDownloadSize(); // Initialize with the current download size
+            double newDownloadSize = game.getDownloadSize();
 
             while (!validInputDownloadSize) {
                 if (newDownloadSizeInput.isEmpty()) {
@@ -666,8 +659,8 @@ public class App {
 
     private static void saveItemToDatabase(GameItem item) {
         try {
-            // Prepare the INSERT statement for the GameItems table
-            String query = "INSERT INTO GameItems (ItemId, ItemName, Year, Stock, Price) VALUES (?, ?, ?, ?, ?)";
+            // Statement INSERT ke tabel gameitems
+            String query = "INSERT INTO gameitems (ItemId, ItemName, Year, Stock, Price) VALUES (?, ?, ?, ?, ?)";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, item.getItemId());
             statement.setString(2, item.getItemName());
@@ -676,7 +669,7 @@ public class App {
             statement.setDouble(5, item.getPrice());
             statement.executeUpdate();
 
-            // Save item-specific details to respective tables
+            // Simpan detail item ke tabel masing masing
             if (item instanceof DigitalGame) {
                 saveDigitalGameDetails((DigitalGame) item);
             } else if (item instanceof PhysicalGame) {
@@ -693,7 +686,7 @@ public class App {
 
     private static void saveDigitalGameDetails(DigitalGame game) {
         try {
-            String query = "INSERT INTO DigitalGames (ItemId, DownloadSize, Platform) VALUES (?, ?, ?)";
+            String query = "INSERT INTO digitalgames (ItemId, DownloadSize, Platform) VALUES (?, ?, ?)";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, game.getItemId());
             statement.setDouble(2, game.getDownloadSize());
@@ -706,7 +699,7 @@ public class App {
 
     private static void savePhysicalGameDetails(PhysicalGame game) {
         try {
-            String query = "INSERT INTO PhysicalGames (ItemId, Edition, Platform) VALUES (?, ?, ?)";
+            String query = "INSERT INTO physicalgames (ItemId, Edition, Platform) VALUES (?, ?, ?)";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, game.getItemId());
             statement.setString(2, game.getEdition());
@@ -719,7 +712,7 @@ public class App {
 
     private static void saveMerchandiseDetails(Merchandise merchandise) {
         try {
-            String query = "INSERT INTO Merchandise (ItemId, Game, Type, Dimension) VALUES (?, ?, ?, ?)";
+            String query = "INSERT INTO merchandise (ItemId, Game, Type, Dimension) VALUES (?, ?, ?, ?)";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, merchandise.getItemId());
             statement.setString(2, merchandise.getGame());
@@ -733,7 +726,7 @@ public class App {
 
     private static void saveGameVoucherDetails(GameVoucher voucher) {
         try {
-            String query = "INSERT INTO GameVouchers (ItemId, MarketPlatform, Quantity, ValidUntil) VALUES (?, ?, ?, ?)";
+            String query = "INSERT INTO gamevouchers (ItemId, MarketPlatform, Quantity, ValidUntil) VALUES (?, ?, ?, ?)";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, voucher.getItemId());
             statement.setString(2, voucher.getMarketPlatform());
@@ -747,8 +740,8 @@ public class App {
 
     private static void updateItemInDatabase(GameItem item) {
         try {
-            // Update the GameItems table
-            String query = "UPDATE GameItems SET ItemName = ?, Year = ?, Stock = ?, Price = ? WHERE ItemId = ?";
+            // Update tabel gameitems
+            String query = "UPDATE gameitems SET ItemName = ?, Year = ?, Stock = ?, Price = ? WHERE ItemId = ?";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, item.getItemName());
             statement.setInt(2, item.getYear());
@@ -757,7 +750,7 @@ public class App {
             statement.setString(5, item.getItemId());
             statement.executeUpdate();
 
-            // Update item-specific details in respective tables
+            // Update item sesuai tabel masing masing
             if (item instanceof DigitalGame) {
                 updateDigitalGameDetails((DigitalGame) item);
             } else if (item instanceof PhysicalGame) {
@@ -774,7 +767,7 @@ public class App {
 
     private static void updateDigitalGameDetails(DigitalGame game) {
         try {
-            String query = "UPDATE DigitalGames SET DownloadSize = ?, Platform = ? WHERE ItemId = ?";
+            String query = "UPDATE digitalgames SET DownloadSize = ?, Platform = ? WHERE ItemId = ?";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setDouble(1, game.getDownloadSize());
             statement.setString(2, game.getPlatform());
@@ -787,7 +780,7 @@ public class App {
 
     private static void updatePhysicalGameDetails(PhysicalGame game) {
         try {
-            String query = "UPDATE PhysicalGames SET Edition = ?, Platform = ? WHERE ItemId = ?";
+            String query = "UPDATE physicalgames SET Edition = ?, Platform = ? WHERE ItemId = ?";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, game.getEdition());
             statement.setString(2, game.getPlatform());
@@ -800,7 +793,7 @@ public class App {
 
     private static void updateMerchandiseDetails(Merchandise merchandise) {
         try {
-            String query = "UPDATE Merchandise SET Game = ?, Type = ?, Dimension = ? WHERE ItemId = ?";
+            String query = "UPDATE merchandise SET Game = ?, Type = ?, Dimension = ? WHERE ItemId = ?";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, merchandise.getGame());
             statement.setString(2, merchandise.getType());
@@ -814,7 +807,7 @@ public class App {
 
     private static void updateGameVoucherDetails(GameVoucher voucher) {
         try {
-            String query = "UPDATE GameVouchers SET MarketPlatform = ?, Quantity = ?, ValidUntil = ? WHERE ItemId = ?";
+            String query = "UPDATE gamevouchers SET MarketPlatform = ?, Quantity = ?, ValidUntil = ? WHERE ItemId = ?";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, voucher.getMarketPlatform());
             statement.setInt(2, voucher.getQuantity());
@@ -828,25 +821,25 @@ public class App {
 
     private static void saveTransaction(TransactionManager transactionManager) {
         try {
-            // Insert a new transaction into the Transactions table
-            String query = "INSERT INTO Transactions (TransactionDate) VALUES (CURRENT_DATE())";
+            // Memasukkan transaksi baru ke tabel Transactions
+            String query = "INSERT INTO transactions (TransactionDate) VALUES (CURRENT_DATE())";
             PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
             statement.executeUpdate();
     
-            // Get the generated TransactionId
+            // Mengambil generated id dari transaksi yang baru saja dimasukkan
             ResultSet generatedKeys = statement.getGeneratedKeys();
             int transactionId = 0;
             if (generatedKeys.next()) {
                 transactionId = generatedKeys.getInt(1);
             }
             
-            // Insert transaction items into the TransactionItems table
+            // Memasukkan detail item transaksi ke tabel transactionitems
             for (TransactionManager.CartItem cartItem : transactionManager.getCart()) {
                 Sellable item = cartItem.getItem();
                 int quantity = cartItem.getQuantity();
                 double totalPrice = item.getPrice() * quantity;
                 
-                query = "INSERT INTO TransactionItems (TransactionId, ItemId, Quantity, TotalPrice) VALUES (?, ?, ?, ?)";
+                query = "INSERT INTO transactionitems (TransactionId, ItemId, Quantity, TotalPrice) VALUES (?, ?, ?, ?)";
                 statement = connection.prepareStatement(query);
                 statement.setInt(1, transactionId);
                 statement.setString(2, item.getItemId());
@@ -874,10 +867,10 @@ public class App {
                     System.out.println("Transaction ID." + transactionId + "     Date." + transactionDate);
                     System.out.println("Items:");
                 }
-                String itemId = resultSet.getString("TransactionItems.ItemId");
-                String itemName = resultSet.getString("GameItems.ItemName");
-                int itemQuantity = resultSet.getInt("TransactionItems.Quantity");
-                double price = resultSet.getDouble("TransactionItems.TotalPrice");
+                String itemId = resultSet.getString("transactionitems.ItemId");
+                String itemName = resultSet.getString("gameitems.ItemName");
+                int itemQuantity = resultSet.getInt("transactionitems.Quantity");
+                double price = resultSet.getDouble("transactionitems.TotalPrice");
                 System.out.println("[" + itemId + "] " + itemName + "(" + itemQuantity + ") : $" + price);
                 temp = transactionId;
             }
@@ -894,7 +887,6 @@ public class App {
             if (yearInput.isEmpty()) {
                 System.out.println("Data tidak boleh kosong");
             } 
-            
             else {
                 try {
                     if (Integer.parseInt(yearInput) <= 0) {
@@ -916,7 +908,6 @@ public class App {
             if (stokInput.isEmpty()) {
                 System.out.println("Data tidak boleh kosong");
             } 
-            
             else {
                 try {
                     if (Integer.parseInt(stokInput) < 0) {
@@ -938,7 +929,6 @@ public class App {
             if (priceInput.isEmpty()) {
                 System.out.println("Data tidak boleh kosong");
             } 
-            
             else {
                 try {
                     if (Double.parseDouble(priceInput) <= 0) {
@@ -960,7 +950,6 @@ public class App {
             if (downloadSizeInput.isEmpty()) {
                 System.out.println("Data tidak boleh kosong");
             } 
-            
             else {
                 try {
                     if (Double.parseDouble(downloadSizeInput) <= 0) {
@@ -993,7 +982,6 @@ public class App {
         return false;
     }
 
-
     //void untuk membersihkan terminal
     public static void clearConsole() {
         try {
@@ -1009,5 +997,4 @@ public class App {
             System.out.println("Error clearing console: " + ex.getMessage());
         }
     }
-
 }
